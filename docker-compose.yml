@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cyber-mirror-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cybermirror
+      POSTGRES_PASSWORD: ${COMPOSE_DB_PASSWORD}
+      POSTGRES_DB: cybermirror
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cybermirror -d cybermirror"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  arena-web:
+    image: nginx:alpine
+    container_name: cyber-mirror-arena
+    restart: unless-stopped
+    command: ["/bin/sh", "/opt/watch-config.sh"]
+    volumes:
+      - ./arena/watch-config.sh:/opt/watch-config.sh:ro
+      - ./arena/security-headers.conf:/etc/nginx/conf.d/blue-ai-security.conf:ro
+    networks:
+      - arena_net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: cyber-mirror-backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://cybermirror:${COMPOSE_DB_PASSWORD}@postgres:5432/cybermirror
+    volumes:
+      - ./arena/security-headers.conf:/app/arena/security-headers.conf
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - default
+      - arena_net
+
+volumes:
+  postgres_data:
+
+networks:
+  arena_net:
+    driver: bridge
+    internal: true
