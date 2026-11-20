@@ -14,3 +14,12 @@
 .coverage
 
 *.backup
+
+# Local backup files - do not upload
+*.pre-*-backup
+*.before-*
+*pre-*-backup
+milestone5_backup/
+
+backend/models_pre_auth.py
+frontend/src/app/page.tsx.pre-encoding-fix

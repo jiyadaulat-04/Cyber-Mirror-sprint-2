@@ -24,7 +24,8 @@ services:
     command: ["/bin/sh", "/opt/watch-config.sh"]
     volumes:
       - ./arena/watch-config.sh:/opt/watch-config.sh:ro
-      - ./arena/security-headers.conf:/etc/nginx/conf.d/blue-ai-security.conf:ro
+      - ./arena/blue-ai-security.conf:/etc/nginx/conf.d/blue-ai-security.conf:ro
+      - ./arena/nginx-conf:/etc/nginx/blue-ai:ro
     networks:
       - arena_net
 
@@ -37,8 +38,10 @@ services:
       - "127.0.0.1:8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://cybermirror:${COMPOSE_DB_PASSWORD}@postgres:5432/cybermirror
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SENTRY_DSN: ${SENTRY_DSN}
     volumes:
-      - ./arena/security-headers.conf:/app/arena/security-headers.conf
+      - ./arena/nginx-conf:/app/arena
     depends_on:
       postgres:
         condition: service_healthy

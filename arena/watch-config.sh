@@ -1,22 +1,19 @@
 #!/bin/sh
 
-CONFIG_FILE="/etc/nginx/conf.d/blue-ai-security.conf"
+CONFIG_FILE="/etc/nginx/blue-ai/security-headers.conf"
 
 echo "Starting Nginx..."
 
 nginx -g 'daemon off;' &
 NGINX_PID=$!
 
-# Wait until Nginx creates its PID file
 while kill -0 "$NGINX_PID" 2>/dev/null; do
     if [ -s /run/nginx.pid ]; then
         break
     fi
-
     sleep 0.5
 done
 
-# Allow Nginx startup to finish
 sleep 1
 
 if ! kill -0 "$NGINX_PID" 2>/dev/null; then
@@ -41,14 +38,13 @@ while kill -0 "$NGINX_PID" 2>/dev/null; do
 
             if nginx -s reload; then
                 LAST_HASH="$CURRENT_HASH"
-                echo "Nginx reload signal sent successfully."
+                echo "Nginx configuration reloaded successfully."
             else
-                echo "Nginx reload failed."
+                echo "Nginx reload failed. Will retry."
             fi
 
         else
-            echo "Invalid configuration. Reload rejected."
-            LAST_HASH="$CURRENT_HASH"
+            echo "Invalid configuration. Reload rejected. Will retry."
         fi
 
     fi
